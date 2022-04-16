@@ -8,7 +8,7 @@ import MSBottom from './MSBottom';
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
-const MainScreen = () => {
+const MainScreen = ({navigation}) => {
   //rnfes
   return (
     <View style={styles.container}>
@@ -16,7 +16,7 @@ const MainScreen = () => {
         <MSHeader/>
       </View>
       <View style={styles.centerContainer}>
-        <MSCenter/>
+        <MSCenter navigation={navigation}/>
       </View>
       <View style={styles.servicesContainer}>
         <MSBottom/>

@@ -1,8 +1,10 @@
 import { StyleSheet, Text, View, TouchableOpacity, ImageBackground, Image } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import { globalStyles } from '../../styles/global-css';
+import experienceData from './data/app-data/experienceData';
 
-const MSCenter = () => {
+const MSCenter = ({navigation}) => {
+  const [experience, setExperienceData] = useState(experienceData);
   return (
     <View style={styles.msCenterContainer}>
       <View style={styles.headerText}>
@@ -14,10 +16,13 @@ const MSCenter = () => {
           <View style={styles.backGroundContainer}>
             <View>
               <Text style={styles.titleService}>Prevención de melanomas</Text>
-              <Text style={styles.mainTextService}>Si te preocupa una mancha, contacta con tu médico y disfruta del nuevo servicio de prevención de melanomas en piel</Text>
+              <Text style={styles.mainTextService}>Si te preocupa una mancha, contacta con tu médico para acceder al nuevo servicio de prevención de melanomas en piel</Text>
             </View>
             <View style={styles.buttonsContainer}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate("Experience", {
+                experienceData: experience,
+                step: 0
+              })}>
                 <View style={styles.leftButton}>
                   <Text style={{ color: 'white' }}>Pruébala ahora</Text>
                 </View>
@@ -71,7 +76,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 5
   },
   mainTextService: {
@@ -79,7 +83,6 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'justify',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 5
   },
   buttonsContainer: {
