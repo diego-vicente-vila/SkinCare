@@ -1,28 +1,53 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler } from 'react-native'
-import React, {useEffect} from 'react'
+import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler } from 'react-native';
+import React, { useEffect } from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 const ExperienceScreen = ({ route, navigation }) => {
   let { experienceData, step } = route.params;
-  console.log(step);
+  let imageToProcess = null;
 
   useEffect(() => {
     BackHandler.addEventListener("hardwareBackPress", backAction);
     return () =>
       BackHandler.removeEventListener("hardwareBackPress", backAction);
   }, []);
-  
+
   const backAction = () => {
-    if (step > 0){
-      step = experienceData[step-1].step;
+    if (step > 0) {
+      step = experienceData[step - 1].step;
     }
   }
+
+  const takeImage = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    console.log(status);
+    if (status !== 'granted') {
+      alert('Lo sentimos, pero es necesario obtener sus permisos para acceder a la cámara y así poder usar el servicio');
+    }
+    else{
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+      if (!result.cancelled) {
+        imageToProcess = result.uri;
+        navigation.navigate("Camara", {
+          image: imageToProcess
+        });
+      }
+    }
+  };
 
   return (
     <View style={styles.principalContainer}>
       <View style={styles.experienceHeader}>
-        {step != 2 && <TouchableOpacity onPress={() => navigation.navigate("Camara")}>
+        {step != 2 && <TouchableOpacity onPress={takeImage}>
           <View style={styles.skipButton}>
             <Text style={{ color: 'white' }}>Omitir</Text>
+            <Ionicons name="camera-outline" size={24} color="white" style={{marginLeft: 5}}/>
           </View>
         </TouchableOpacity>}
       </View>
@@ -36,20 +61,20 @@ const ExperienceScreen = ({ route, navigation }) => {
       </View>
       <View style={styles.experienceBottomContainer}>
         <TouchableOpacity onPress={() => {
-          if (step == 2) {
-            console.log("Hola")
-            navigation.navigate("Camara");
+          if (step === (experienceData.length - 1)) {
+            takeImage();
           }
           else {
-            step = experienceData[step+1].step;
+            step = experienceData[step + 1].step;
             navigation.push("Experience", {
               experienceData: experienceData,
               step: step
             });
           }
         }}>
-          <View style={styles.nextButton}>
+          <View style={step == (experienceData.length - 1) ? styles.readyButton : styles.nextButton}>
             <Text style={{ color: 'white' }}>{experienceData[step].nextButtonText}</Text>
+            {step == (experienceData.length - 1) && <Ionicons name="camera-outline" size={24} color="white" style={{marginLeft: 5}}/>}
           </View>
         </TouchableOpacity>
       </View>
@@ -71,10 +96,12 @@ const styles = StyleSheet.create({
     width: '95%',
   },
   skipButton: {
+    display: 'flex',
+    flexDirection: 'row',
     backgroundColor: '#2196F3',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     borderRadius: 30,
   },
   experienceCenterContainer: {
@@ -103,4 +130,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 120,
     borderRadius: 30,
   },
+  readyButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    backgroundColor: '#2196F3',
+    alignItems: 'center',
+    paddingVertical: 17,
+    paddingHorizontal: 115,
+    borderRadius: 30,
+  }
 })

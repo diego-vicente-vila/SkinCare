@@ -41,9 +41,9 @@ const styles = StyleSheet.create({
       alignItems: 'center',
     },
     centerContainer: {
-      flexBasis: '45%'
+      flexBasis: '45%',
     },
     servicesContainer: {
-      flexBasis: '45%'
+      flexBasis: '45%',
     }
 })

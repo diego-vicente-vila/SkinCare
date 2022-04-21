@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, TouchableOpacity, ImageBackground, Image } from 'react-native'
 import React, { useState } from 'react'
-import { globalStyles } from '../../styles/global-css';
+import { globalStyles } from '../styles/global-css';
 import experienceData from './data/app-data/experienceData';
 
 const MSCenter = ({navigation}) => {
@@ -12,7 +12,7 @@ const MSCenter = ({navigation}) => {
         <Text style={globalStyles.containerHeaderText}>Tu servicio médico más cerca que nunca</Text>
       </View>
       <View style={styles.principalServiceContainer}>
-        <ImageBackground source={require('../../assets/imgs/skin_background_4.jpg')} resizeMode="cover" style={styles.backGroundImage}>
+        <ImageBackground source={require('../assets/imgs/skin_background_4.jpg')} resizeMode="cover" style={styles.backGroundImage}>
           <View style={styles.backGroundContainer}>
             <View>
               <Text style={styles.titleService}>Prevención de melanomas</Text>
@@ -27,8 +27,8 @@ const MSCenter = ({navigation}) => {
                   <Text style={{ color: 'white' }}>Pruébala ahora</Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.rightButton}>
-                <Image source={require('../../assets/imgs/eva_question-mark-circle-outline.png')} style={globalStyles.iconsImg} />
+              <TouchableOpacity style={styles.rightButton} onPress={() => navigation.navigate("Info")}>
+                <Image source={require('../assets/imgs/eva_question-mark-circle-outline.png')} style={globalStyles.iconsImg} />
               </TouchableOpacity>
             </View>
           </View>
@@ -43,11 +43,10 @@ export default MSCenter;
 const styles = StyleSheet.create({
   msCenterContainer: {
     display: 'flex',
+    width: '95%',
+    alignSelf: 'center'
   },
   headerText: {
-    display: 'flex',
-    alignSelf: 'center',
-    width: '95%',
   },
   exploreText: {
     fontSize: 30,
@@ -55,10 +54,7 @@ const styles = StyleSheet.create({
     color: 'black'
   },
   principalServiceContainer: {
-    display: 'flex',
-    width: '95%',
     height: '70%',
-    alignSelf: 'center',
     marginTop: '5.5%'
   },
   backGroundImage: {
@@ -68,7 +64,7 @@ const styles = StyleSheet.create({
   },
   backGroundContainer: {
     flex: 1,
-    padding: 20,
+    padding: 18,
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
   titleService: {
