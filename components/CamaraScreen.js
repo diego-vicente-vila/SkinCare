@@ -1,12 +1,20 @@
 import { TouchableOpacity, StyleSheet, Text, Button, Image, View, BackHandler } from 'react-native';
-import React, { useState ,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CommonActions } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import * as tensorflow from '@tensorflow/tfjs';
+import { decodeJpeg } from '@tensorflow/tfjs-react-native';
 import { Octicons } from '@expo/vector-icons';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { decode, encode } from 'base64-arraybuffer';
+import * as jpeg from 'jpeg-js';
 
 const CamaraScreen = ({ route, navigation }) => {
-    const { image : receivedImage } = route.params;
-    const [image, setImage] = useState(receivedImage);
+    let { imageFile, modelReady } = route.params;
+    const [image, setImage] = useState(imageFile);
+    const [imageData, setImageData] = useState(null);
+    const [modelPredictionResult, setModelResult] = useState(null);
+
     useEffect(() => {
         BackHandler.addEventListener("hardwareBackPress", backAction);
         return () =>
@@ -19,11 +27,82 @@ const CamaraScreen = ({ route, navigation }) => {
                 index: 0,
                 routes: [
                     { name: 'Home' },
-                    { name: 'Camara', params: { image: image } }
+                    { name: 'Camara', params: { imageF: imageFile, modelR: modelReady} }
                 ],
             })
         );
     }
+
+    const processImage = async() => {
+        let imagePreprocessed = await preprocessImage();
+        if (imagePreprocessed){
+            let modelPredictionResult = await modelReady.predict(imagePreprocessed).data();
+            setModelResult(Math.round(modelPredictionResult * 100) / 100);
+        }
+    }
+    
+
+    const preprocessImage = async () => {
+        let base64ImageData = await resizeImage();
+        if (base64ImageData){
+            return await imageToTensor(base64ImageData);
+        }else{
+            alert("Ha ocurrido un error, intentalo de nuevo")
+        }
+    }
+
+    const imageToTensor = async (rawImageData) => {
+        let imageArrayBuffer = decode(rawImageData);
+        const imageArray = new Uint8Array(imageArrayBuffer);
+        const imageTensor = decodeJpeg(imageArray);
+        const imageTensorED = tensorflow.expandDims(imageTensor);
+        setImageData(imageTensorED);
+        console.log(imageTensorED);
+        return imageTensorED;
+        /*
+        let imageArrayBuffer = decode(rawImageData);
+        const imageArray = new Uint8Array(imageArrayBuffer);
+        const buffer = new Float32Array(256 * 256 * 3)
+        let offset = 0;  // offset into original data
+        for (let i = 0; i < buffer.length; i += 3) {
+            buffer[i] = imageArray[offset];
+            buffer[i + 1] = imageArray[offset + 1];
+            buffer[i + 2] = imageArray[offset + 2];
+            offset += 4;
+        }
+        let floatArrayRescaled = buffer.map(value => value / 255.0)
+        const imageTensor = tensorflow.tensor3d(floatArrayRescaled, [256, 256, 3], 'float32')
+        const imageTensorExpandedDimension = tensorflow.expandDims(imageTensor);
+        setImageData(imageTensorExpandedDimension);
+        */
+        //console.log(imageTensorExpandedDimension)
+        //console.log("hola")
+        //let result = melanomaDetector.predict(imageTensorExpandedDimension, {verbose: true}).dataSync()
+        //console.log(result)
+        //const imageData = new Uint8Array(imageArrayBuffer);
+        //const floatArray = Float32Array.from(imageData);
+        //let floatArrayRescaled = floatArray.map(value => value/255.0)
+        //console.log(floatArrayRescaled)
+        //const imageTensor = tensorflow.tensor3d(floatArrayRescaled, [2, 2, 3], 'float32')
+        //console.log(imageTensor)
+        //const imageTensorExpandedDimension = tensorflow.expandDims(floatArrayRescaled, 0);
+        //console.log(imageTensor)
+        //const imageTensor = decodeJpeg(imageData);
+        //console.log(imageTensor)
+        //const imageTensorExpandedDimension = tensorflow.expandDims(imageTensor, 0);
+        //console.log(imageTensorExpandedDimension);
+    }
+
+    const resizeImage = async () => {
+        const manipResult = await manipulateAsync(
+            image,
+            [
+                { resize: { height: 256, width: 256 } },
+            ],
+            { base64: true, compress: 1, format: SaveFormat.JPEG }
+        );
+        return manipResult.base64;
+    };
 
     const takeImage = async () => {
         let result = await ImagePicker.launchCameraAsync({
@@ -44,6 +123,7 @@ const CamaraScreen = ({ route, navigation }) => {
                     <Octicons name="chevron-left" size={60} color="black" style={{ transform: [{ rotate: '135deg' }] }} />
                 </View>
                 {image && <Image source={{ uri: image }} style={styles.imageStyle} />}
+                {modelPredictionResult && <Text style={styles.resultText}>{modelPredictionResult}</Text>}
                 <View style={styles.imageBorderContainer}>
                     <Octicons name="chevron-left" size={60} color="black" style={{ transform: [{ rotate: '-405deg' }] }} />
                     <Octicons name="chevron-left" size={60} color="black" style={{ transform: [{ rotate: '-135deg' }] }} />
@@ -55,7 +135,7 @@ const CamaraScreen = ({ route, navigation }) => {
                         <Text style={{ color: 'white' }}>Repetir foto</Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={processImage}>
                     <View style={styles.button}>
                         <Text style={{ color: 'white' }}>Enviar foto al médico</Text>
                     </View>
@@ -121,4 +201,14 @@ const styles = StyleSheet.create({
         textAlign: 'justify',
         fontSize: 15
     },
+    resultText: {
+        fontSize: 25,
+        fontWeight: 'bold',
+        alignSelf: 'center',
+        position: 'absolute',
+        bottom: 0,
+        color: 'white',
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowRadius: 5,
+    }
 })
