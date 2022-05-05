@@ -1,6 +1,5 @@
 import { Dimensions ,StyleSheet, Text, View, StatusBar } from 'react-native'
 import React from 'react'
-import { SafeAreaView } from 'react-native-web';
 import MSHeader from './MSHeader';
 import MSCenter from './MSCenter';
 import MSBottom from './MSBottom';

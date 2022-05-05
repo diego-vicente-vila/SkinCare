@@ -4,7 +4,11 @@
     "slug": "skin-care-app",
     "version": "1.0.0",
     "assetBundlePatterns": [
-      "**/*"
-    ]
+      "assets/imgs/*",
+      "components/data/ia-model/**/*"
+    ],
+    "android": {
+      "package": "com.skincare.dvv"
+    }
   }
 }

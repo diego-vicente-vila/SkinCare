@@ -2,13 +2,10 @@ import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler, ActivityI
 import React, { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as tensorflow from '@tensorflow/tfjs';
-import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
+import OWNModelLoader from './data/ia-model/own-model/own-model-loader';
 
 const ExperienceScreen = ({ route, navigation }) => {
   let { experienceData, step } = route.params;
-  const [tfReady, settfReady] = useState(false)
-  const [model, setModel] = useState(null);
   const [loadingModel, setloadingModel] = useState(false);
   let image = null;
 
@@ -24,44 +21,21 @@ const ExperienceScreen = ({ route, navigation }) => {
     }
   }
 
-  const loadAIModel = async () => {
-    await tensorflow.ready();
-    console.log("Cargando modelo")
-    setloadingModel(true);
-    const modelJson = require("./data/ia-model/model-json/model.json");
-    const modelWeight1 = require("./data/ia-model/model-weights/group1-shard1of9.bin");
-    const modelWeight2 = require("./data/ia-model/model-weights/group1-shard2of9.bin");
-    const modelWeight3 = require("./data/ia-model/model-weights/group1-shard3of9.bin");
-    const modelWeight4 = require("./data/ia-model/model-weights/group1-shard4of9.bin");
-    const modelWeight5 = require("./data/ia-model/model-weights/group1-shard5of9.bin");
-    const modelWeight6 = require("./data/ia-model/model-weights/group1-shard6of9.bin");
-    const modelWeight7 = require("./data/ia-model/model-weights/group1-shard7of9.bin");
-    const modelWeight8 = require("./data/ia-model/model-weights/group1-shard8of9.bin");
-    const modelWeight9 = require("./data/ia-model/model-weights/group1-shard9of9.bin");
-    const model = await tensorflow.loadLayersModel(bundleResourceIO(modelJson,
-      [
-        modelWeight1, modelWeight2, modelWeight3,
-        modelWeight4, modelWeight5, modelWeight6,
-        modelWeight7, modelWeight8, modelWeight9
-      ]));
-    setloadingModel(false);
-    console.log('Modelo cargado')
-    return model;
-  }
-
   const takeImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       alert('Lo sentimos, pero es necesario obtener sus permisos para acceder a la cámara y así poder usar el servicio');
     }
     else {
+      setloadingModel(true);
       let [imageResult, modelLoaded] = await Promise.all([ImagePicker.launchCameraAsync(
         {
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           quality: 1,
         }
-      ), loadAIModel()]);
+      ), OWNModelLoader()()]);
+      setloadingModel(false);
       if (!imageResult.cancelled && modelLoaded != null && imageResult.uri) {
         image = imageResult.uri;
         navigation.navigate("Camara", {
