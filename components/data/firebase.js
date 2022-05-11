@@ -10,8 +10,11 @@ import firebaseConfig from './firebaseConfig';
 //import {...} from "firebase/functions";
 //import {...} from "firebase/storage";
 
+// Initialize Firebase
+
 
 // Initialize Firebase
+
 const firebaseApp = firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();

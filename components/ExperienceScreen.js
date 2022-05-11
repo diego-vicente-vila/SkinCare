@@ -1,13 +1,10 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler, ActivityIndicator } from 'react-native';
-import React, { useState, useEffect, useCallback} from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as tensorflow from '@tensorflow/tfjs';
-import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 
 const ExperienceScreen = ({ route, navigation }) => {
   let { experienceData, step } = route.params;
-  const [model, setModel] = useState(null);
   let image = null;
 
   const takeImage = async () => {
@@ -16,46 +13,23 @@ const ExperienceScreen = ({ route, navigation }) => {
       alert('Lo sentimos, pero es necesario obtener sus permisos para acceder a la cámara y así poder usar el servicio');
     }
     else {
-      let [imageResult, modelLoaded] = await Promise.all([ImagePicker.launchCameraAsync(
+      let imageResult = await ImagePicker.launchCameraAsync(
         {
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           quality: 1,
         }
-      ), OWNModelLoader()]);
-      if (!imageResult.cancelled && modelLoaded != null && imageResult.uri) {
+      );
+      if (!imageResult.cancelled && imageResult.uri) {
+
         image = imageResult.uri;
         navigation.navigate("Camara", {
           imageFile: image,
-          modelReady: modelLoaded
+          patientIdentifier: Math.floor(Math.random() * 10) + 1
         });
       }
     }
   };
-
-  const OWNModelLoader = useCallback(async() => {
-    console.log("Cargando modelo")
-    await tensorflow.ready();
-    const modelJson = require("./data/ia-model/own-model/model-json/model.json");
-    const modelWeight1 = require("./data/ia-model/own-model/model-weights/group1-shard1of9.bin");
-    const modelWeight2 = require("./data/ia-model/own-model/model-weights/group1-shard2of9.bin");
-    const modelWeight3 = require("./data/ia-model/own-model/model-weights/group1-shard3of9.bin");
-    const modelWeight4 = require("./data/ia-model/own-model/model-weights/group1-shard4of9.bin");
-    const modelWeight5 = require("./data/ia-model/own-model/model-weights/group1-shard5of9.bin");
-    const modelWeight6 = require("./data/ia-model/own-model/model-weights/group1-shard6of9.bin");
-    const modelWeight7 = require("./data/ia-model/own-model/model-weights/group1-shard7of9.bin");
-    const modelWeight8 = require("./data/ia-model/own-model/model-weights/group1-shard8of9.bin");
-    const modelWeight9 = require("./data/ia-model/own-model/model-weights/group1-shard9of9.bin");
-    const model = await tensorflow.loadLayersModel(bundleResourceIO(modelJson,
-      [
-        modelWeight1, modelWeight2, modelWeight3,
-        modelWeight4, modelWeight5, modelWeight6,
-        modelWeight7, modelWeight8, modelWeight9
-      ]));
-    console.log('Modelo cargado')
-
-    return model;
-  }, [model]);
 
   return (
     <View style={styles.principalContainer}>
@@ -81,7 +55,6 @@ const ExperienceScreen = ({ route, navigation }) => {
             takeImage();
           }
           else {
-            //step = experienceData[step + 1].step;
             navigation.push("Experience", {
               experienceData: experienceData,
               step: (step+1)

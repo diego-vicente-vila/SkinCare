@@ -2,24 +2,28 @@ import { TouchableOpacity, StyleSheet, Text, Image, View, BackHandler } from 're
 import React, { useState, useEffect } from 'react';
 import { CommonActions } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import * as tensorflow from '@tensorflow/tfjs';
-import { decodeJpeg } from '@tensorflow/tfjs-react-native';
 import { Octicons } from '@expo/vector-icons';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import { decode } from 'base64-arraybuffer';
 import firebase from './data/firebase';
 
 const CamaraScreen = ({ route, navigation }) => {
-    let { imageFile, modelReady } = route.params;
+    let { imageFile, patientIdentifier } = route.params;
     const [image, setImage] = useState(imageFile);
-    const [imageData, setImageData] = useState(null);
-    const [modelPredictionResult, setModelResult] = useState(null);
-
+    const [modelPredictionResult, setModelPredictionResult] = useState();
+    
     useEffect(() => {
         BackHandler.addEventListener("hardwareBackPress", backAction);
-        return () =>
+        return () =>{
+            detatchFireStoreDocListener();
             BackHandler.removeEventListener("hardwareBackPress", backAction);
+        }
     }, []);
+
+    useEffect(() => {
+      return ()=> {
+        setModelPredictionResult(null);
+        detatchFireStoreDocListener();
+      }
+    }, [image])
 
     const backAction = () => {
         navigation.dispatch(
@@ -27,29 +31,19 @@ const CamaraScreen = ({ route, navigation }) => {
                 index: 0,
                 routes: [
                     { name: 'Home' },
-                    { name: 'Camara', params: { imageF: imageFile, modelR: modelReady } }
+                    { name: 'Camara', params: { imageF: imageFile } }
                 ],
             })
         );
     }
 
-    const processImage = async () => {
-        let imagePreprocessed = await preprocessImage();
-        if (imagePreprocessed) {
-            let modelPredictionResult = await modelReady.predict(imagePreprocessed).data();
-            let modelPredictionResultRounded = Math.round(modelPredictionResult * 100) / 100;
-            setModelResult(modelPredictionResultRounded);
-            const dataToStore = {
-                customMetadata : {
-                    patientId: Math.floor(Math.random() * 10) + 1,
-                    date: new Date().toISOString()
-                }
+    const uploadToFirebase = async () => {
+        const dataToStore = {
+            customMetadata : {
+                patientId: patientIdentifier,
+                date: new Date().toISOString()
             }
-            await uploadDataToCloud(dataToStore);
         }
-    }
-
-    const uploadDataToCloud = async (dataToStore) => {
         const blob = await new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.onload = function () {
@@ -63,40 +57,26 @@ const CamaraScreen = ({ route, navigation }) => {
             xhr.send(null);
         });
         const ref = firebase.cloudStorage.ref().child(dataToStore.customMetadata.patientId + '-' + dataToStore.customMetadata.date);
-        await Promise.all([firebase.db.collection('patient-mela-analysis').add(dataToStore.customMetadata) , ref.put(blob, dataToStore)]);
+        const [docReference, _] = await Promise.all([firebase.db.collection('patient-mela-analysis').add(dataToStore.customMetadata) , ref.put(blob, dataToStore)]);
         blob.close();
-        alert("Datos subidos a Firebase")
+        await fireStoreDocListener(docReference.id);
     }
 
-    const preprocessImage = async () => {
-        let base64ImageData = await resizeImage();
-        if (base64ImageData) {
-            return await imageToTensor(base64ImageData);
-        } else {
-            alert("Ha ocurrido un error, intentalo de nuevo")
-        }
+    const fireStoreDocListener = async(docId) => {
+        const subscriber = firebase.db.collection('patient-mela-analysis').doc(docId)
+          .onSnapshot(documentSnapshot => {
+              const documentInfo = documentSnapshot.data();
+            console.log('User data: ', documentInfo);
+            if(documentInfo.hasOwnProperty('analysisResult')){
+                setModelPredictionResult(documentInfo.analysisResult);
+            }
+          });
     }
 
-    const imageToTensor = async (rawImageData) => {
-        let imageArrayBuffer = decode(rawImageData);
-        const imageArray = new Uint8Array(imageArrayBuffer);
-        const imageTensor = decodeJpeg(imageArray);
-        const imageTensorED = tensorflow.expandDims(imageTensor);
-        setImageData(imageTensorED);
-        console.log(imageTensorED);
-        return imageTensorED;
+    const detatchFireStoreDocListener = async() => {
+        const unsub = firebase.db.collection('patient-mela-analysis').onSnapshot(() => {
+        });
     }
-
-    const resizeImage = async () => {
-        const manipResult = await manipulateAsync(
-            image,
-            [
-                { resize: { height: 256, width: 256 } },
-            ],
-            { base64: true, compress: 1, format: SaveFormat.JPEG }
-        );
-        return manipResult.base64;
-    };
 
     const takeImage = async () => {
         let result = await ImagePicker.launchCameraAsync({
@@ -129,7 +109,7 @@ const CamaraScreen = ({ route, navigation }) => {
                         <Text style={{ color: 'white' }}>Repetir foto</Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={processImage}>
+                <TouchableOpacity onPress={uploadToFirebase}>
                     <View style={styles.button}>
                         <Text style={{ color: 'white' }}>Enviar foto al médico</Text>
                     </View>
