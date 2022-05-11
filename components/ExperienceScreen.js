@@ -1,25 +1,14 @@
 import { StyleSheet, Text, View, TouchableOpacity, Image, BackHandler, ActivityIndicator } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import OWNModelLoader from './data/ia-model/own-model/own-model-loader';
+import * as tensorflow from '@tensorflow/tfjs';
+import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
 
 const ExperienceScreen = ({ route, navigation }) => {
   let { experienceData, step } = route.params;
-  const [loadingModel, setloadingModel] = useState(false);
+  const [model, setModel] = useState(null);
   let image = null;
-
-  useEffect(() => {
-    BackHandler.addEventListener("hardwareBackPress", backAction);
-    return () =>
-      BackHandler.removeEventListener("hardwareBackPress", backAction);
-  }, []);
-
-  const backAction = () => {
-    if (step > 0) {
-      step = experienceData[step - 1].step;
-    }
-  }
 
   const takeImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -27,15 +16,13 @@ const ExperienceScreen = ({ route, navigation }) => {
       alert('Lo sentimos, pero es necesario obtener sus permisos para acceder a la cámara y así poder usar el servicio');
     }
     else {
-      setloadingModel(true);
       let [imageResult, modelLoaded] = await Promise.all([ImagePicker.launchCameraAsync(
         {
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           quality: 1,
         }
-      ), OWNModelLoader()()]);
-      setloadingModel(false);
+      ), OWNModelLoader()]);
       if (!imageResult.cancelled && modelLoaded != null && imageResult.uri) {
         image = imageResult.uri;
         navigation.navigate("Camara", {
@@ -43,16 +30,37 @@ const ExperienceScreen = ({ route, navigation }) => {
           modelReady: modelLoaded
         });
       }
-      else if(imageResult.cancelled){
-        setloadingModel(false);
-      }
     }
   };
+
+  const OWNModelLoader = useCallback(async() => {
+    console.log("Cargando modelo")
+    await tensorflow.ready();
+    const modelJson = require("./data/ia-model/own-model/model-json/model.json");
+    const modelWeight1 = require("./data/ia-model/own-model/model-weights/group1-shard1of9.bin");
+    const modelWeight2 = require("./data/ia-model/own-model/model-weights/group1-shard2of9.bin");
+    const modelWeight3 = require("./data/ia-model/own-model/model-weights/group1-shard3of9.bin");
+    const modelWeight4 = require("./data/ia-model/own-model/model-weights/group1-shard4of9.bin");
+    const modelWeight5 = require("./data/ia-model/own-model/model-weights/group1-shard5of9.bin");
+    const modelWeight6 = require("./data/ia-model/own-model/model-weights/group1-shard6of9.bin");
+    const modelWeight7 = require("./data/ia-model/own-model/model-weights/group1-shard7of9.bin");
+    const modelWeight8 = require("./data/ia-model/own-model/model-weights/group1-shard8of9.bin");
+    const modelWeight9 = require("./data/ia-model/own-model/model-weights/group1-shard9of9.bin");
+    const model = await tensorflow.loadLayersModel(bundleResourceIO(modelJson,
+      [
+        modelWeight1, modelWeight2, modelWeight3,
+        modelWeight4, modelWeight5, modelWeight6,
+        modelWeight7, modelWeight8, modelWeight9
+      ]));
+    console.log('Modelo cargado')
+
+    return model;
+  }, [model]);
 
   return (
     <View style={styles.principalContainer}>
       <View style={styles.experienceHeader}>
-        {step != 2 && <TouchableOpacity onPress={takeImage}>
+        {step != (experienceData.length - 1) && <TouchableOpacity onPress={takeImage}>
           <View style={styles.skipButton}>
             <Text style={{ color: 'white' }}>Omitir</Text>
             <Ionicons name="camera-outline" size={24} color="white" style={{ marginLeft: 5 }} />
@@ -60,13 +68,12 @@ const ExperienceScreen = ({ route, navigation }) => {
         </TouchableOpacity>}
       </View>
       <View style={styles.experienceCenterContainer}>
-        <View>
-          <Image />
+        <Image source={experienceData[step].illustration} style={{resizeMode:'contain',height: 300, width: 300}} />
+        <View style={styles.centerContainerInfo}>
+          <Text style={styles.experienceTitle}>{experienceData[step].title}</Text>
+          <Text adjustsFontSizeToFit={true} style={styles.experienceDescription}>{experienceData[step].description}</Text>
+          <Image source={experienceData[step].stepIcon} style={styles.stepIcon} />
         </View>
-        <View>
-          <Text style={styles.experienceCenterContainerText}>{experienceData[step].experienceText}</Text>
-        </View>
-        {loadingModel && <ActivityIndicator size="large" color="#2196F3" />}
       </View>
       <View style={styles.experienceBottomContainer}>
         <TouchableOpacity onPress={() => {
@@ -74,10 +81,10 @@ const ExperienceScreen = ({ route, navigation }) => {
             takeImage();
           }
           else {
-            step = experienceData[step + 1].step;
+            //step = experienceData[step + 1].step;
             navigation.push("Experience", {
               experienceData: experienceData,
-              step: step
+              step: (step+1)
             });
           }
         }}>
@@ -119,10 +126,29 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 255, 0.25)'
   },
-  experienceCenterContainerText: {
-    textAlign: 'justify'
+  centerContainerInfo: {
+    display: 'flex',
+    width: '90%',
+    marginVertical: '5%',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  experienceTitle: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  experienceDescription: {
+    fontSize: 18,
+    textAlign: 'justify',
+    marginTop: '3%'
+  },
+  stepIcon: {
+    resizeMode:'contain',
+    width: 150,
+    marginTop: '5%'
   },
   experienceBottomContainer: {
     flexBasis: '15%',

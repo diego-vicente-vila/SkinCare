@@ -1,4 +1,4 @@
-import { TouchableOpacity, StyleSheet, Text, Button, Image, View, BackHandler } from 'react-native';
+import { TouchableOpacity, StyleSheet, Text, Image, View, BackHandler } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { CommonActions } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -6,8 +6,8 @@ import * as tensorflow from '@tensorflow/tfjs';
 import { decodeJpeg } from '@tensorflow/tfjs-react-native';
 import { Octicons } from '@expo/vector-icons';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import { decode, encode } from 'base64-arraybuffer';
-import * as jpeg from 'jpeg-js';
+import { decode } from 'base64-arraybuffer';
+import firebase from './data/firebase';
 
 const CamaraScreen = ({ route, navigation }) => {
     let { imageFile, modelReady } = route.params;
@@ -27,26 +27,52 @@ const CamaraScreen = ({ route, navigation }) => {
                 index: 0,
                 routes: [
                     { name: 'Home' },
-                    { name: 'Camara', params: { imageF: imageFile, modelR: modelReady} }
+                    { name: 'Camara', params: { imageF: imageFile, modelR: modelReady } }
                 ],
             })
         );
     }
 
-    const processImage = async() => {
+    const processImage = async () => {
         let imagePreprocessed = await preprocessImage();
-        if (imagePreprocessed){
+        if (imagePreprocessed) {
             let modelPredictionResult = await modelReady.predict(imagePreprocessed).data();
-            setModelResult(Math.round(modelPredictionResult * 100) / 100);
+            let modelPredictionResultRounded = Math.round(modelPredictionResult * 100) / 100;
+            setModelResult(modelPredictionResultRounded);
+            const dataToStore = {
+                customMetadata : {
+                    patientId: Math.floor(Math.random() * 10) + 1,
+                    date: new Date().toISOString()
+                }
+            }
+            await uploadDataToCloud(dataToStore);
         }
     }
-    
+
+    const uploadDataToCloud = async (dataToStore) => {
+        const blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+                resolve(xhr.response);
+            };
+            xhr.onerror = function (e) {
+                reject(new TypeError("Network request failed"));
+            };
+            xhr.responseType = "blob";
+            xhr.open("GET", image, true);
+            xhr.send(null);
+        });
+        const ref = firebase.cloudStorage.ref().child(dataToStore.customMetadata.patientId + '-' + dataToStore.customMetadata.date);
+        await Promise.all([firebase.db.collection('patient-mela-analysis').add(dataToStore.customMetadata) , ref.put(blob, dataToStore)]);
+        blob.close();
+        alert("Datos subidos a Firebase")
+    }
 
     const preprocessImage = async () => {
         let base64ImageData = await resizeImage();
-        if (base64ImageData){
+        if (base64ImageData) {
             return await imageToTensor(base64ImageData);
-        }else{
+        } else {
             alert("Ha ocurrido un error, intentalo de nuevo")
         }
     }
@@ -59,38 +85,6 @@ const CamaraScreen = ({ route, navigation }) => {
         setImageData(imageTensorED);
         console.log(imageTensorED);
         return imageTensorED;
-        /*
-        let imageArrayBuffer = decode(rawImageData);
-        const imageArray = new Uint8Array(imageArrayBuffer);
-        const buffer = new Float32Array(256 * 256 * 3)
-        let offset = 0;  // offset into original data
-        for (let i = 0; i < buffer.length; i += 3) {
-            buffer[i] = imageArray[offset];
-            buffer[i + 1] = imageArray[offset + 1];
-            buffer[i + 2] = imageArray[offset + 2];
-            offset += 4;
-        }
-        let floatArrayRescaled = buffer.map(value => value / 255.0)
-        const imageTensor = tensorflow.tensor3d(floatArrayRescaled, [256, 256, 3], 'float32')
-        const imageTensorExpandedDimension = tensorflow.expandDims(imageTensor);
-        setImageData(imageTensorExpandedDimension);
-        */
-        //console.log(imageTensorExpandedDimension)
-        //console.log("hola")
-        //let result = melanomaDetector.predict(imageTensorExpandedDimension, {verbose: true}).dataSync()
-        //console.log(result)
-        //const imageData = new Uint8Array(imageArrayBuffer);
-        //const floatArray = Float32Array.from(imageData);
-        //let floatArrayRescaled = floatArray.map(value => value/255.0)
-        //console.log(floatArrayRescaled)
-        //const imageTensor = tensorflow.tensor3d(floatArrayRescaled, [2, 2, 3], 'float32')
-        //console.log(imageTensor)
-        //const imageTensorExpandedDimension = tensorflow.expandDims(floatArrayRescaled, 0);
-        //console.log(imageTensor)
-        //const imageTensor = decodeJpeg(imageData);
-        //console.log(imageTensor)
-        //const imageTensorExpandedDimension = tensorflow.expandDims(imageTensor, 0);
-        //console.log(imageTensorExpandedDimension);
     }
 
     const resizeImage = async () => {
