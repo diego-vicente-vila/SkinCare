@@ -1,11 +1,8 @@
-import { Dimensions ,StyleSheet, Text, View, StatusBar } from 'react-native'
+import { StyleSheet, View, StatusBar } from 'react-native'
 import React from 'react'
 import MSHeader from './MSHeader';
 import MSCenter from './MSCenter';
 import MSBottom from './MSBottom';
-
-const windowWidth = Dimensions.get('window').width;
-const windowHeight = Dimensions.get('window').height;
 
 const MainScreen = ({navigation}) => {
   //rnfes
@@ -35,7 +32,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
     },
     header: {
-      flexBasis: '8%',
+      flexBasis: '9%',
       flexDirection: 'row',
       alignItems: 'center',
     },

@@ -1,4 +1,4 @@
-import { TouchableOpacity, StyleSheet, Text, Image, View, BackHandler } from 'react-native';
+import { TouchableOpacity, StyleSheet, Text, Image, View, BackHandler, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { CommonActions } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -8,6 +8,7 @@ import firebase from './data/firebase';
 const CamaraScreen = ({ route, navigation }) => {
     let { imageFile, patientIdentifier } = route.params;
     const [image, setImage] = useState(imageFile);
+    const [sendingDataToCloud, setSendingDataToCloud] = useState(false);
     const [modelPredictionResult, setModelPredictionResult] = useState();
     
     useEffect(() => {
@@ -38,6 +39,7 @@ const CamaraScreen = ({ route, navigation }) => {
     }
 
     const uploadToFirebase = async () => {
+        setSendingDataToCloud(true);
         const dataToStore = {
             customMetadata : {
                 patientId: patientIdentifier,
@@ -68,6 +70,7 @@ const CamaraScreen = ({ route, navigation }) => {
               const documentInfo = documentSnapshot.data();
             console.log('User data: ', documentInfo);
             if(documentInfo.hasOwnProperty('analysisResult')){
+                setSendingDataToCloud(false);
                 setModelPredictionResult(documentInfo.analysisResult);
             }
           });
@@ -97,7 +100,8 @@ const CamaraScreen = ({ route, navigation }) => {
                     <Octicons name="chevron-left" size={60} color="black" style={{ transform: [{ rotate: '135deg' }] }} />
                 </View>
                 {image && <Image source={{ uri: image }} style={styles.imageStyle} />}
-                {modelPredictionResult && <Text style={styles.resultText}>{modelPredictionResult}</Text>}
+                {modelPredictionResult && <Text style={styles.resultText}>{(modelPredictionResult * 100).toFixed(2)} %</Text>}
+                {sendingDataToCloud && <ActivityIndicator style={styles.cloudActivityIndicator} size="large" color="#2196F3" />}
                 <View style={styles.imageBorderContainer}>
                     <Octicons name="chevron-left" size={60} color="black" style={{ transform: [{ rotate: '-405deg' }] }} />
                     <Octicons name="chevron-left" size={60} color="black" style={{ transform: [{ rotate: '-135deg' }] }} />
@@ -184,5 +188,10 @@ const styles = StyleSheet.create({
         color: 'white',
         textShadowColor: 'rgba(0, 0, 0, 0.5)',
         textShadowRadius: 5,
+    },
+    cloudActivityIndicator: {
+        position: 'absolute',
+        bottom: 0,
+        alignSelf: 'center'
     }
 })

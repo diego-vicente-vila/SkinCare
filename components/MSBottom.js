@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '45%',
         height: 120,
-        marginTop: 15,
+        marginTop: '5%',
     },
     cardsContainer: {
         height: '100%',
@@ -83,8 +83,8 @@ const styles = StyleSheet.create({
         marginLeft: '20%'
     },
     iconsCards: {
-        height: 40,
-        width: 50,
+        height: 35,
+        width: 45,
         marginBottom: '3%'
     },
     cardInnerText: {

@@ -3,12 +3,17 @@
     "name": "skin-care-app",
     "slug": "skin-care-app",
     "version": "1.0.0",
+    "orientation":"portrait",
+    "userInterfaceStyle": "light",
     "assetBundlePatterns": [
-      "assets/imgs/*",
-      "components/data/ia-model/**/*"
+      "assets/imgs/*"
     ],
     "android": {
-      "package": "com.skincare.dvv"
+      "package": "com.skincare.dvv",
+      "userInterfaceStyle": "light"
+    },
+    "ios": {
+      "userInterfaceStyle": "light"
     }
   }
 }
