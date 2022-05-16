@@ -135,6 +135,7 @@ export default CamaraScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: 'white'
     },
     imageContainer: {
         flexBasis: '45%',

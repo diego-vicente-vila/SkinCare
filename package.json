@@ -25,7 +25,6 @@
     "expo-system-ui": "~1.2.0",
     "expo-updates": "~0.13.1",
     "firebase": "^9.7.0",
-    "jetifier": "^2.0.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-native": "0.68.2",

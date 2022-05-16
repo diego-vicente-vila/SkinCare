@@ -1,10 +1,12 @@
 {
   "expo": {
-    "name": "skin-care-app",
+    "name": "SkinCare",
     "slug": "skin-care-app",
     "version": "1.0.0",
+    "icon": "assets/imgs/Logo.png",
     "orientation":"portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#ffffff",
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -13,10 +15,12 @@
     ],
     "android": {
       "package": "com.skincare.dvv",
-      "userInterfaceStyle": "light"
+      "userInterfaceStyle": "automatic",
+      "backgroundColor": "#ffffff"
     },
     "ios": {
-      "userInterfaceStyle": "light"
+      "userInterfaceStyle": "automatic",
+      "backgroundColor": "#ffffff"
     }
   }
 }

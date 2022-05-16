@@ -9,7 +9,6 @@ import 'firebase/compat/storage';
 //import {...} from "firebase/functions";
 //import {...} from "firebase/storage";
 
-
 // Initialize Firebase
 const firebaseApp = firebase.initializeApp(firebaseConfig);
 

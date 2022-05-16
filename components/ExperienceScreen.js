@@ -75,7 +75,8 @@ export default ExperienceScreen;
 
 const styles = StyleSheet.create({
   principalContainer: {
-    flex: 1
+    flex: 1,
+    backgroundColor: 'white'
   },
   experienceHeader: {
     flexBasis: '10%',
