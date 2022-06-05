@@ -1,4 +1,5 @@
 import { TouchableOpacity, StyleSheet, Text, Image, View, BackHandler, ActivityIndicator } from 'react-native';
+import AwesomeAlert from 'react-native-awesome-alerts';
 import React, { useState, useEffect } from 'react';
 import { CommonActions } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -10,20 +11,21 @@ const CamaraScreen = ({ route, navigation }) => {
     const [image, setImage] = useState(imageFile);
     const [sendingDataToCloud, setSendingDataToCloud] = useState(false);
     const [modelPredictionResult, setModelPredictionResult] = useState();
-    
+    const [showAlert, setShowAlert] = useState(false);
+
     useEffect(() => {
         BackHandler.addEventListener("hardwareBackPress", backAction);
-        return () =>{
+        return () => {
             detatchFireStoreDocListener();
             BackHandler.removeEventListener("hardwareBackPress", backAction);
         }
     }, []);
 
     useEffect(() => {
-      return ()=> {
-        setModelPredictionResult(null);
-        detatchFireStoreDocListener();
-      }
+        return () => {
+            setModelPredictionResult(null);
+            detatchFireStoreDocListener();
+        }
     }, [image])
 
     const backAction = () => {
@@ -41,7 +43,7 @@ const CamaraScreen = ({ route, navigation }) => {
     const uploadToFirebase = async () => {
         setSendingDataToCloud(true);
         const dataToStore = {
-            customMetadata : {
+            customMetadata: {
                 patientId: patientIdentifier,
                 date: new Date().toISOString()
             }
@@ -59,24 +61,27 @@ const CamaraScreen = ({ route, navigation }) => {
             xhr.send(null);
         });
         const ref = firebase.cloudStorage.ref().child(dataToStore.customMetadata.patientId + '-' + dataToStore.customMetadata.date);
-        const [docReference, _] = await Promise.all([firebase.db.collection('patient-mela-analysis').add(dataToStore.customMetadata) , ref.put(blob, dataToStore)]);
+        const [docReference, _] = await Promise.all([firebase.db.collection('patient-mela-analysis').add(dataToStore.customMetadata), ref.put(blob, dataToStore)]);
         blob.close();
         await fireStoreDocListener(docReference.id);
     }
 
-    const fireStoreDocListener = async(docId) => {
+    const fireStoreDocListener = async (docId) => {
         const subscriber = firebase.db.collection('patient-mela-analysis').doc(docId)
-          .onSnapshot(documentSnapshot => {
-              const documentInfo = documentSnapshot.data();
-            console.log('User data: ', documentInfo);
-            if(documentInfo.hasOwnProperty('analysisResult')){
-                setSendingDataToCloud(false);
-                setModelPredictionResult(documentInfo.analysisResult);
-            }
-          });
+            .onSnapshot(documentSnapshot => {
+                const documentInfo = documentSnapshot.data();
+                console.log('User data: ', documentInfo);
+                if (documentInfo.hasOwnProperty('analysisResult')) {
+                    setSendingDataToCloud(false);
+                    setModelPredictionResult(documentInfo.analysisResult);
+                    setTimeout(() => {
+                        setShowAlert(true);
+                    }, 10000);
+                }
+            });
     }
 
-    const detatchFireStoreDocListener = async() => {
+    const detatchFireStoreDocListener = async () => {
         const unsub = firebase.db.collection('patient-mela-analysis').onSnapshot(() => {
         });
     }
@@ -120,12 +125,37 @@ const CamaraScreen = ({ route, navigation }) => {
                 </TouchableOpacity>
             </View>
             <View style={styles.infoContainer}>
-                <Text style={styles.infoText}>
-                    Su foto será enviada a su médico de cabecera el cual le informará del resultado del análisis lo antes posible.
-                    Ut minima et ad doloribus incidunt. Exercitationem facilis porro cupiditate magni perspiciatis sequi adipisci.
-                    Error maxime amet ipsa et dolores maiores.
+                <Text adjustsFontSizeToFit style={styles.infoText}>
+                    Antes de enviar la foto, podemos volver a repetirla haciendo click sobre el botón "Repetir foto" en caso de que la mancha no se vea con claridad.
+                    En caso de estar satisfechos con la calidad de la imagen, deberemos de hacer click sobre el botón de "Enviar foto al médico", que hará llegar a
+                    nuestro médico la foto y finalmente seremos redirigidos a la pantalla principal.
                 </Text>
             </View>
+            <AwesomeAlert
+                show={showAlert}
+                title="Foto enviada"
+                message="Esta será recibida por tu médico!"
+                closeOnTouchOutside={false}
+                closeOnHardwareBackPress={false}
+                showCancelButton={false}
+                showConfirmButton={true}
+                confirmText="Salir a la pantalla principal"
+                confirmButtonColor="#2196F3"
+                onConfirmPressed={()=>{
+                    setShowAlert(false);
+                    navigation.navigate("Home");
+                }}
+                titleStyle={{
+                    fontSize: 22
+                }}
+                messageStyle={{
+                    fontSize: 18,
+                    textAlign: 'center',
+                }}
+                confirmButtonTextStyle={{
+                    fontSize: 16,
+                }}
+            />
         </View>
     )
 }
@@ -176,9 +206,9 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     },
     infoText: {
+        fontSize: 16,
         color: 'black',
         textAlign: 'justify',
-        fontSize: 15
     },
     resultText: {
         fontSize: 25,

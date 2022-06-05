@@ -45,7 +45,7 @@ const ExperienceScreen = ({ route, navigation }) => {
         <Image source={experienceData[step].illustration} style={{resizeMode:'contain',height: 300, width: 300}} />
         <View style={styles.centerContainerInfo}>
           <Text style={styles.experienceTitle}>{experienceData[step].title}</Text>
-          <Text adjustsFontSizeToFit={true} style={styles.experienceDescription}>{experienceData[step].description}</Text>
+          <Text numberOfLines={5} ellipsizeMode='tail' style={styles.experienceDescription}>{experienceData[step].description}</Text>
           <Image source={experienceData[step].stepIcon} style={styles.stepIcon} />
         </View>
       </View>
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     marginVertical: '5%',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   experienceTitle: {
     fontSize: 30,
@@ -117,12 +117,13 @@ const styles = StyleSheet.create({
   experienceDescription: {
     fontSize: 18,
     textAlign: 'justify',
-    marginTop: '3%'
+    marginTop: '3%',
+    width: '100%'
   },
   stepIcon: {
     resizeMode:'contain',
     width: 150,
-    marginTop: '5%'
+    marginTop: '5%',
   },
   experienceBottomContainer: {
     flexBasis: '15%',

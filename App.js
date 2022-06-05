@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet, Text, View, StatusBar } from 'react-native';
+import { StyleSheet, View, StatusBar } from 'react-native';
 import MainScreen from './components/MainScreen';
 import ExperienceScreen from './components/ExperienceScreen';
 import CamaraScreen from './components/CamaraScreen';
@@ -14,7 +14,7 @@ export default function App() {
     return (
       <View style={styles.container}>
         {/*<Text>Open up App.js to start working on your app!</Text>*/}
-        <StatusBar/>
+        <StatusBar barStyle='light-content' backgroundColor={'black'}/>
         <MainScreen navigation={navigation}/>
       </View>
     );
