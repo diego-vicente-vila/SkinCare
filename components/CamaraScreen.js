@@ -126,9 +126,8 @@ const CamaraScreen = ({ route, navigation }) => {
             </View>
             <View style={styles.infoContainer}>
                 <Text adjustsFontSizeToFit style={styles.infoText}>
-                    Antes de enviar la foto, podemos volver a repetirla haciendo click sobre el botón "Repetir foto" en caso de que la mancha no se vea con claridad.
-                    En caso de estar satisfechos con la calidad de la imagen, deberemos de hacer click sobre el botón de "Enviar foto al médico", que hará llegar a
-                    nuestro médico la foto y finalmente seremos redirigidos a la pantalla principal.
+                    Antes de enviar la foto, haciendo click sobre el botón "Repetir foto" podremos volver a hacernos la foto en en caso de que la mancha no se vea con claridad.
+                    En caso de estar satisfechos con la calidad de la foto, deberemos de hacer click sobre el botón de "Enviar foto al médico".
                 </Text>
             </View>
             <AwesomeAlert

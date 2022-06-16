@@ -118,17 +118,18 @@ const styles = StyleSheet.create({
   titleImageContainer: {
     flex: 1,
     alignItems: 'center',
+    alignSelf: 'center',
+    width: '90%',
     marginTop: '10%',
-    marginBottom: '5%'
+    marginBottom: '5%',
   },
   title: {
     fontSize: 17,
     fontWeight:'bold',
-    textAlign: 'center'
   },
   postMainImage: {
-    height: 200,
-    width: 320,
+    height: 220,
+    width: 345,
     borderWidth: 1,
     borderColor: 'grey',
     marginTop: '3%'
